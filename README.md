@@ -46,7 +46,7 @@ Complete analysis method:
 ```golang
 package main
 
-import "github.com/hjdo/microd/config"
+import "github.com/hjdo/config"
 
 func main() {
   // Parse the content of the configuration file into the Config structure, 
@@ -67,7 +67,7 @@ Configuration item independent resolution mode:
 ```golang
 package main
 
-import "github.com/hjdo/microd/config"
+import "github.com/hjdo/config"
 
 func main() {
   var s Service
