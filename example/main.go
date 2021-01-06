@@ -7,10 +7,10 @@ import (
 )
 
 func main() {
-	config.Init("./config/config.yml")
+	config.Init("example/config/config.yml")
 
 	// Complete configuration object
-	fmt.Println(config.Config)
+	fmt.Printf("%+v\n", config.Config)
 	// Individually bound configuration items
-	fmt.Println(config.Manage)
+	fmt.Printf("%+v\n", config.Manage)
 }

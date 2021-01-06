@@ -37,7 +37,7 @@ func Init(cfg, watchPrefix string, watchObj interface{}) error {
 	c.watchConfig()
 	// Get configuration object reflection collection
 	c.newWithWatcher(watchObj, watchPrefix)
-	// Assign original values ​​from the configuration file at startup
+	// Assign original values from the configuration file at startup
 	for con, val := range c.conf2Value {
 		c.changeValue(con, val)
 	}
@@ -89,6 +89,9 @@ func (c *config) newWithWatcher(i interface{}, prefix string) {
 
 		// tag name use by config file type
 		yml := ft.Tag.Get(strings.TrimLeft(filepath.Ext(c.name), "."))
+		if yml == "" {
+			continue
+		}
 		key := fmt.Sprintf("%s.%s", prefix, yml)
 		if prefix == "" {
 			key = yml
@@ -108,61 +111,64 @@ func (c *config) changeValue(field string, val interface{}) {
 	if refVal, ok = c.conf2Value[field]; !ok {
 		return
 	}
-	refVal.Set(reflect.ValueOf(c.formatAtom(refVal, field)))
+	c.formatAtom(&refVal, field)
+	//refVal.Set(reflect.ValueOf(c.formatAtom(refVal, field)))
 }
 
-func (c *config) formatAtom(v reflect.Value, field string) interface{} {
+func (c *config) formatAtom(v *reflect.Value, field string) {
+	fmt.Println(v.Kind(), v.Type().String(), field)
 	switch v.Kind() {
 	case reflect.Invalid:
 		log.Fatalf("load config failed: invalid config type.")
 	case reflect.Int:
-		return c.viper.GetInt(field)
+		v.Set(reflect.ValueOf(c.viper.GetInt(field)))
 	case reflect.Int8:
-		return c.viper.GetInt(field)
+		v.Set(reflect.ValueOf(c.viper.GetInt(field)))
 	case reflect.Int16:
-		return c.viper.GetInt(field)
+		v.Set(reflect.ValueOf(c.viper.GetInt(field)))
 	case reflect.Int32:
-		return c.viper.GetInt32(field)
+		v.Set(reflect.ValueOf(c.viper.GetInt32(field)))
 	case reflect.Int64:
-		return c.viper.GetInt64(field)
+		v.Set(reflect.ValueOf(c.viper.GetInt64(field)))
 	case reflect.Uint:
-		return c.viper.GetUint(field)
+		v.Set(reflect.ValueOf(c.viper.GetUint(field)))
 	case reflect.Uint8:
-		return c.viper.GetUint(field)
+		v.Set(reflect.ValueOf(c.viper.GetUint(field)))
 	case reflect.Uint16:
-		return c.viper.GetUint(field)
+		v.Set(reflect.ValueOf(c.viper.GetUint(field)))
 	case reflect.Uint32:
-		return c.viper.GetUint32(field)
+		v.Set(reflect.ValueOf(c.viper.GetUint32(field)))
 	case reflect.Uint64:
-		return c.viper.GetUint64(field)
+		v.Set(reflect.ValueOf(c.viper.GetUint64(field)))
 	case reflect.Bool:
-		return c.viper.GetBool(field)
+		v.Set(reflect.ValueOf(c.viper.GetBool(field)))
 	case reflect.String:
-		return c.viper.GetString(field)
+		v.Set(reflect.ValueOf(c.viper.GetString(field)))
 	case reflect.Slice:
 		switch v.Type().String() {
 		case "[]string":
-			return c.viper.GetStringSlice(field)
+			v.Set(reflect.ValueOf(c.viper.GetStringSlice(field)))
 		case "[]int":
-			return c.viper.GetIntSlice(field)
+			v.Set(reflect.ValueOf(c.viper.GetIntSlice(field)))
 		default:
-			log.Fatalf("unsupported type :%s", v.Type().String())
+			_ = c.viper.UnmarshalKey(field, v)
 		}
 	case reflect.Map:
 		switch v.Type().String() {
 		case "map[string]interface {}":
-			return c.viper.GetStringMap(field)
+			v.Set(reflect.ValueOf(c.viper.GetStringMap(field)))
 		case "map[string]string":
-			return c.viper.GetStringMapString(field)
+			v.Set(reflect.ValueOf(c.viper.GetStringMapString(field)))
 		case "map[string][]string":
-			return c.viper.GetStringMapStringSlice(field)
+			v.Set(reflect.ValueOf(c.viper.GetStringMapStringSlice(field)))
 		default:
-			log.Fatalf("unsupported type :%s", v.Type().String())
+			var value map[interface{}]interface{}
+			_ = c.viper.UnmarshalKey(field, &value)
+			v.Set(reflect.ValueOf(value))
 		}
 	default: // reflect.Array, reflect.Struct, reflect.Interface
 		log.Fatalf("unsupported type :%s", v.Type().String())
 	}
-	return nil
 }
 
 func fileExists(filename string) bool {
